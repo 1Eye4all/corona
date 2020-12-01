@@ -1,0 +1,56 @@
+# Copyright: 2016-2020 Paul Obermeier (obermeier@tcl3d.org)
+# Distributed under BSD license.
+#
+# BuildType: Starpack
+#
+# Manual changes in source code:
+# sources/gorilla.tcl: Replaced calls to spinbox with ttk::spinbox for better display on Darwin.
+
+proc Init_gorilla { libName libVersion } {
+    SetScriptAuthor    $libName "Paul Obermeier" "obermeier@tcl3d.org"
+    SetLibHomepage     $libName "https://github.com/zdia/gorilla/wiki"
+    SetLibDependencies $libName "Tcl" "Tclkit"
+    SetPlatforms       $libName "All"
+}
+
+proc Build_gorilla { libName libVersion buildDir instDir devDir distDir } {
+    set starpackName "$libName[GetExeSuffix]"
+    set starpackApp  "$libName.app"
+
+    SetTclkitLegalCopyright  $libName "© 2004-2013 Pilhofer, Diaczyszyn, Ellis"
+    SetTclkitFileDescription $libName "Tcl based password manager"
+    SetTclkitProductName     $libName "Password Gorilla"
+    SetTclkitProductVersion  $libName "$libVersion"
+    SetTclkitFileVersion     $libName "[GetTclVersion]"
+
+    if { [UseStage "Extract" $libName] } {
+        ExtractLibrary  $libName  "$buildDir"
+    }
+
+    if { [UseStage "Compile" $libName] } {
+        MakeStarpackTk "$buildDir/sources/${libName}.tcl" $libName $starpackName $instDir \
+                       [file join $buildDir "sources" "isaac.tcl"] \
+                       [file join $buildDir "sources" "viewhelp.tcl"] \
+                       [file join $buildDir "sources" "help.txt"] \
+                       [file join $buildDir "sources" "LICENSE.txt"] \
+                       [file join $buildDir "sources" "blowfish"] \
+                       [file join $buildDir "sources" "modules"] \
+                       [file join $buildDir "sources" "msgs"] \
+                       [file join $buildDir "sources" "pics"] \
+                       [file join $buildDir "sources" "pwsafe"] \
+                       [file join $buildDir "sources" "tcllib"] \
+                       [file join $buildDir "sources" "twofish"] \
+                       [file join [GetDevTclLibDir] "itcl"]
+    }
+
+    if { [UseStage "Distribute" $libName] } {
+        SingleFileCopy "$instDir/$starpackName"  "$devDir/[GetTclBinDir]"
+        SingleFileCopy "$instDir/$starpackName"  "$distDir/[GetTclBinDir]"
+
+        if { [IsDarwin] } {
+            MultiFileCopy "$instDir/$starpackApp" "$devDir/[GetTclBinDir]/$starpackApp"   "*" true
+            MultiFileCopy "$instDir/$starpackApp" "$distDir/[GetTclBinDir]/$starpackApp"  "*" true
+        }
+    }
+    return true
+}
